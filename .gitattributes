@@ -1,0 +1,2 @@
+bnp.csv filter=lfs diff=lfs merge=lfs -text
+DATA/bnp.csv filter=lfs diff=lfs merge=lfs -text
