@@ -6,7 +6,7 @@ from run_experiment_common import *
 
 # For overriding defaults from run_experiment_common
 PARALLEL = False
-RUN_EXPERIMENT = False
+RUN_EXPERIMENT = True
 VISUALIZE_RESULTS = True
 
 
@@ -30,7 +30,7 @@ def visualize():
         print(env)
         for row, rewardfun in enumerate(mean_df['rewardfun'].unique()):
             for agidx, (labeltext, agent, linestyle) in enumerate(
-                    [('Network', 'mlpclassifier', '-')]):
+                    [('Network', 'mlpclassifier', '-'), ('DecisionTree', 'dtclassifier', '-.')]):
                 rel_df = mean_df[(mean_df['env'] == env) & (mean_df['rewardfun'] == rewardfun)]
                 rel_df[rel_df['agent'] == agent].plot(x='step', y='napfd', label=labeltext, ylim=[0, 1], linewidth=0.8,
                                                       style=linestyle, color=sns.color_palette()[agidx], ax=axarr[row, column])

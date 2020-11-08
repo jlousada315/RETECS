@@ -6,7 +6,7 @@ import os
 from run_experiment_common import *
 
 # For overriding defaults from run_experiment_common
-PARALLEL = True
+PARALLEL = False
 RUN_EXPERIMENT = False
 EVALUATE = True
 VISUALIZE_RESULTS = True
@@ -15,11 +15,16 @@ history_lengths = [2, 4, 5, 6, 7, 8, 9, 10, 15, 25, 50]
 
 def exp_history_length(iteration):
     avg_napfd = []
-
+    """
+    lambda hl: (agents.NetworkAgent(histlen=hl, state_size=retecs.DEFAULT_STATE_SIZE, action_size=1,
+                                    hidden_size=retecs.DEFAULT_NO_HIDDEN_NODES), retecs.preprocess_continuous,
+                reward.tcfail),
+    """
     ags = [
-        lambda hl: (agents.NetworkAgent(histlen=hl, state_size=retecs.DEFAULT_STATE_SIZE, action_size=1,
-                                        hidden_size=retecs.DEFAULT_NO_HIDDEN_NODES), retecs.preprocess_continuous,
-                    reward.tcfail),
+        lambda hl: (agents.DTAgent(histlen=hl,
+                                action_size=1, criterion=retecs.DEFAULT_CRITERION, max_depth=retecs.DEFAULT_MAX_DEPTH,
+                                min_samples_split=retecs.DEFAULT_MIN_SAMPLES_SPLIT), retecs.preprocess_continuous,
+                 reward.tcfail),
     ]
 
     for histlen in history_lengths:
@@ -61,6 +66,7 @@ def visualize():
     rel_df['napfd'] = rel_df['napfd'] / max(rel_df['napfd']) * 100
 
     rel_df.loc[rel_df['agent'] == 'mlpclassifier', 'agent'] = method_names['mlpclassifier']
+    rel_df.loc[rel_df['agent'] == 'dtclassifier', 'agent'] = method_names['dtclassifier']
 
     fig = plt.figure(figsize=figsize_column(1.0))
     ax = sns.barplot(x='history_length', y='napfd', hue='agent', data=rel_df, figure=fig)
@@ -77,7 +83,7 @@ def visualize():
     #    ax2.set_ylabel('State Space Size')
     #    ax2.tick_params('y')
 
-    ax.legend(title=None, loc=4, frameon=True)
+    ax.legend(title=None, loc='upper left', frameon=True)
 
     ax.set_axisbelow(True)
     ax.yaxis.grid(zorder=0)

@@ -22,6 +22,9 @@ DEFAULT_HISTORY_LENGTH = 25
 DEFAULT_STATE_SIZE = DEFAULT_HISTORY_LENGTH + 1
 DEFAULT_LEARNING_RATE = 0.05
 DEFAULT_EPSILON = 0.2
+DEFAULT_CRITERION = 'gini'
+DEFAULT_MAX_DEPTH = None
+DEFAULT_MIN_SAMPLES_SPLIT = 2
 DEFAULT_DUMP_INTERVAL = 100
 DEFAULT_VALIDATION_INTERVAL = 100
 DEFAULT_PRINT_LOG = False
@@ -37,7 +40,7 @@ def recency_weighted_avg(values, alpha):
 def preprocess_continuous(state, scenario_metadata, histlen):
     if scenario_metadata['maxExecTime'] > scenario_metadata['minExecTime']:
         time_since = (scenario_metadata['maxExecTime'] - state['LastRun']).total_seconds() / (
-            scenario_metadata['maxExecTime'] - scenario_metadata['minExecTime']).total_seconds()
+                scenario_metadata['maxExecTime'] - scenario_metadata['minExecTime']).total_seconds()
     else:
         time_since = 0
 
@@ -58,7 +61,7 @@ def preprocess_continuous(state, scenario_metadata, histlen):
 def preprocess_discrete(state, scenario_metadata, histlen):
     if scenario_metadata['maxDuration'] > scenario_metadata['minDuration']:
         duration = (scenario_metadata['maxDuration'] - state['Duration']) / (
-            scenario_metadata['maxDuration'] - scenario_metadata['minDuration'])
+                scenario_metadata['maxDuration'] - scenario_metadata['minDuration'])
     else:
         duration = 0
 
@@ -71,7 +74,7 @@ def preprocess_discrete(state, scenario_metadata, histlen):
 
     if scenario_metadata['maxExecTime'] > scenario_metadata['minExecTime']:
         time_since = (scenario_metadata['maxExecTime'] - state['LastRun']).total_seconds() / (
-            scenario_metadata['maxExecTime'] - scenario_metadata['minExecTime']).total_seconds()
+                scenario_metadata['maxExecTime'] - scenario_metadata['minExecTime']).total_seconds()
     else:
         time_since = 0
 
@@ -195,7 +198,11 @@ class PrioLearning(object):
             'history_length': self.agent.histlen,
             'rewardfun': self.reward_function.__name__,
             'sched_time': self.scenario_provider.avail_time_ratio,
-            'hidden_size': 'x'.join(str(x) for x in self.agent.hidden_size) if hasattr(self.agent, 'hidden_size') else 0
+            'hidden_size': 'x'.join(str(x) for x in self.agent.hidden_size) if hasattr(self.agent,
+                                                                                       'hidden_size') else 0,
+            'depth': self.agent.max_depth if hasattr(self.agent, 'max_depth') else 0,
+            'min_samples_split': self.agent.min_samples_split if hasattr(self.agent, 'min_samples_split') else 0,
+            'criterion': self.agent.criterion if hasattr(self.agent, 'criterion') else 0
         }
 
         if collect_comparison:
@@ -329,7 +336,6 @@ if __name__ == '__main__':
     state_size = 2 + args.histlen
     preprocess_function = preprocess_discrete
 
-
     if args.agent == 'network':
         if args.reward in ('binary', 'tcfail'):
             action_size = 1
@@ -338,6 +344,16 @@ if __name__ == '__main__':
 
         agent = agents.NetworkAgent(state_size=state_size, action_size=action_size, hidden_size=args.hiddennet,
                                     histlen=args.histlen)
+    elif args.agent == 'dtclassifier':
+        if args.reward in ('binary', 'tcfail'):
+            action_size = 1
+        else:
+            action_size = 2
+
+        agent = agents.DTAgent(state_size=state_size, action_size=args.actions,
+                               histlen=args.histlen, criterion=DEFAULT_CRITERION, max_depth=DEFAULT_MAX_DEPTH,
+                               min_samples_split=DEFAULT_MIN_SAMPLES_SPLIT)
+
     elif args.agent == 'heur_random':
         agent = agents.RandomAgent(histlen=args.histlen)
     elif args.agent == 'heur_sort':
@@ -353,7 +369,7 @@ if __name__ == '__main__':
     elif args.scenario_provider == 'incremental':
         scenario_provider = scenarios.IncrementalScenarioProvider(episode_length=args.no_scenarios)
     elif args.scenario_provider == 'paintcontrol':
-        #scenario_provider = scenarios.IndustrialDatasetScenarioProvider(tcfile='DATA/paintcontrol.csv')
+        # scenario_provider = scenarios.IndustrialDatasetScenarioProvider(tcfile='DATA/paintcontrol.csv')
         scenario_provider = scenarios.FileBasedSubsetScenarioProvider(scheduleperiod=datetime.timedelta(days=1),
                                                                       tcfile='tc_data_paintcontrol.csv',
                                                                       solfile='tc_sol_paintcontrol.csv')

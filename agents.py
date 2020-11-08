@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from sklearn import neural_network
+from sklearn import neural_network, tree
 
 try:
     import cPickle as pickle
@@ -55,6 +55,7 @@ class BaseAgent(object):
     @classmethod
     def load(cls, filename):
         return pickle.load(open(filename + '.p', 'rb'))
+
 
 class NetworkAgent(BaseAgent):
     def __init__(self, state_size, action_size, hidden_size, histlen):
@@ -132,6 +133,89 @@ class NetworkAgent(BaseAgent):
                 self.model.partial_fit(x, y)
             except ValueError:
                 self.init_model(warm_start=False)
+                self.model.fit(x, y)
+                self.model_fit = True
+        else:
+            self.model.fit(x, y)  # Call fit once to learn classes
+            self.model_fit = True
+
+
+# Decision Tree based agent
+class DTAgent(BaseAgent):
+    def __init__(self, action_size, histlen, criterion, max_depth, min_samples_split):
+        super(DTAgent, self).__init__(histlen=histlen)
+        self.name = 'dtclassifier'
+        self.experience_length = 10000
+        self.experience_batch_size = 1000
+        self.experience = ExperienceReplay(max_memory=self.experience_length)
+        self.episode_history = []
+        self.iteration_counter = 0
+        self.action_size = action_size
+        self.criterion = criterion
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.model = None
+        self.model_fit = False
+        self.init_model()
+
+    # TODO This could improve performance (if necessary)
+    # def get_all_actions(self, states):
+    #   try:
+
+    def init_model(self):
+        if self.action_size == 1:
+            self.model = tree.DecisionTreeClassifier(criterion=self.criterion, max_depth=self.max_depth,
+                                                     min_samples_split=self.min_samples_split)
+        else:
+            self.model = tree.DecisionTreeClassifier(criterion=self.criterion, max_depth=self.max_depth,
+                                                     min_samples_split=self.min_samples_split)
+
+        self.model_fit = False
+
+    def get_action(self, s):
+        if self.model_fit:
+            if self.action_size == 1:
+                a = self.model.predict_proba(np.array(s).reshape(1, -1))[0][0]
+            else:
+                a = self.model.predict(np.array(s).reshape(1, -1))[0]
+        else:
+            a = np.random.random()
+
+        if self.train_mode:
+            self.episode_history.append((s, a))
+
+        return a
+
+    def reward(self, rewards):
+        if not self.train_mode:
+            return
+
+        try:
+            x = float(rewards)
+            rewards = [x] * len(self.episode_history)
+        except:
+            if len(rewards) < len(self.episode_history):
+                raise Exception('Too few rewards')
+
+        self.iteration_counter += 1
+
+        for ((state, action), reward) in zip(self.episode_history, rewards):
+            self.experience.remember((state, reward))
+
+        self.episode_history = []
+
+        if self.iteration_counter == 1 or self.iteration_counter % 5 == 0:
+            self.learn_from_experience()
+
+    def learn_from_experience(self):
+        experiences = self.experience.get_batch(self.experience_batch_size)
+        x, y = zip(*experiences)
+
+        if self.model_fit:
+            try:
+                self.model.fit(x, y)
+            except ValueError:
+                self.init_model()
                 self.model.fit(x, y)
                 self.model_fit = True
         else:

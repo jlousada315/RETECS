@@ -13,6 +13,7 @@ if USE_LATEX:
 else:
     mpl.use('Agg')
 
+
 def figsize_column(scale, height_ratio=1.0):
     fig_width_pt = 240  # Get this from LaTeX using \the\textwidth
     inches_per_pt = 1.0 / 72.27  # Convert pt to inch
@@ -76,7 +77,7 @@ CI_CYCLES = 1000
 
 DATA_DIR = 'RESULTS'
 FIGURE_DIR = 'Images'
-PARALLEL = True
+PARALLEL = False
 PARALLEL_POOL_SIZE = 2
 
 RUN_EXPERIMENT = True
@@ -84,6 +85,7 @@ VISUALIZE_RESULTS = True
 
 method_names = {
     'mlpclassifier': 'Network',
+    'dtclassifier': 'DecisionTree',
     'heur_random': 'Random',
     'heur_sort': 'Sorting',
     'heur_weight': 'Weighting'
@@ -127,12 +129,18 @@ def run_experiments(exp_fun, parallel=PARALLEL):
     print('Ran experiments: %d results' % len(avg_res))
 
 
-def exp_run_industrial_datasets(iteration, datasets=['bnp']):
+def exp_run_industrial_datasets(iteration, datasets=['bnp', 'iofrol', 'paintcontrol']):
+    """
+    lambda: (agents.NetworkAgent(histlen=retecs.DEFAULT_HISTORY_LENGTH, state_size=retecs.DEFAULT_STATE_SIZE,
+                                 action_size=1,
+                                 hidden_size=retecs.DEFAULT_NO_HIDDEN_NODES), retecs.preprocess_continuous,
+             reward.tcfail)
+     """
     ags = [
-        lambda: (agents.NetworkAgent(histlen=retecs.DEFAULT_HISTORY_LENGTH, state_size=retecs.DEFAULT_STATE_SIZE,
-                                     action_size=1,
-                                     hidden_size=retecs.DEFAULT_NO_HIDDEN_NODES), retecs.preprocess_continuous,
-                 reward.tcfail)
+        lambda: (agents.DTAgent(histlen=retecs.DEFAULT_HISTORY_LENGTH,
+                                action_size=1, criterion=retecs.DEFAULT_CRITERION, max_depth=retecs.DEFAULT_MAX_DEPTH,
+                                min_samples_split=retecs.DEFAULT_MIN_SAMPLES_SPLIT), retecs.preprocess_continuous,
+                 reward.tcfail),
     ]
 
     reward_funs = {

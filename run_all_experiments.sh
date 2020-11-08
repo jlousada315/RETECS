@@ -1,6 +1,6 @@
 #!/bin/sh
 echo "$(date '+%d-%m-%Y %H:%M') RQ0: History Length"
-./run_experiment_rq0_history_length.py
+./run_experiment_rq0_dt_tuning.py
 echo "$(date '+%d-%m-%Y %H:%M') RQ0: Network Hidden Nodes"
 ./run_experiment_rq0_network_hidden_nodes.py
 echo "$(date '+%d-%m-%Y %H:%M') RQ0: Reward Functions"
