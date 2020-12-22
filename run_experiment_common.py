@@ -100,7 +100,7 @@ reward_names = {
 env_names = {
     'paintcontrol': 'ABB Paint Control',
     'iofrol': 'ABB IOF/ROL',
-    'bnp': 'BNP',
+    'bnp': 'Finance',
     'gsdtsr': 'GSDTSR'
 }
 

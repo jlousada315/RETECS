@@ -1,10 +1,10 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Experiment, evaluation and visualization for RQ0
 from run_experiment_common import *
 
 PARALLEL = False
-RUN_EXPERIMENT = True
+RUN_EXPERIMENT = False
 VISUALIZE_RESULTS = True
 DATA_DIR = 'RESULTS'
 PARALLEL_POOL_SIZE = 2
@@ -28,8 +28,8 @@ def exp_tree_params(iteration):
 
                 scenario = get_scenario('bnp')
 
-                file_appendix = 'rq0_%s_sc%s_criterion%s_depth%s_min_samples%s_%d' % (
-                agent.name, sc, c, d, s, iteration)
+                file_appendix = 'rq0_%s_criterion%s_depth%s_min_samples%s_%d' % (
+                    agent.name, c, d, s, iteration)
 
                 rl_learning = retecs.PrioLearning(agent=agent,
                                                   scenario_provider=scenario,
@@ -39,6 +39,7 @@ def exp_tree_params(iteration):
                                                   dump_interval=100,
                                                   validation_interval=0,
                                                   output_dir=DATA_DIR)
+
                 res = rl_learning.train(no_scenarios=CI_CYCLES,
                                         print_log=False,
                                         plot_graphs=False,
@@ -58,17 +59,42 @@ def visualize():
     df = df[~df['agent'].isin(['heur_random', 'heur_sort', 'heur_weight'])]
 
     rel_df = df.groupby(['agent', 'criterion', 'depth', 'min_samples_split'], as_index=False).mean()
-    rel_df['napfd'] = rel_df['napfd']
+    rel_df['napfd'] = rel_df['napfd'] / max(rel_df['napfd']) * 100
 
-    ax = sns.FacetGrid(rel_df, col='depth', hue='criterion',
-                       col_wrap=4)
-    ax = ax.map(plt.axhline, y=0, ls=':', c='.5')
-    ax = ax.map(plt.plot, 'min_samples_split', 'napfd', marker='o').add_legend()
-    # ax = ax.set_xlabel('min_samples_split')
-    # ax = ax.set_ylabel('\% of best result')
-    save_figures(ax, filename)
+    fig, axes = plt.subplots(2, 1, sharey=True)
+    sns.set(font_scale=1.4)
 
-    ax.fig.tight_layout()
+    ax = sns.barplot(x='depth', y='napfd', hue='min_samples_split',
+                     data=rel_df[rel_df['criterion'] == 'gini'], ax=axes[0])
+    ax1 = sns.barplot(x='depth', y='napfd', hue='min_samples_split',
+                      data=rel_df[rel_df['criterion'] == 'entropy'], ax=axes[1])
+
+    ax.set_xlabel('')
+    ax1.set_xlabel('')
+    ax.set_ylabel('')
+    ax1.set_ylabel('')
+
+    ax.set_title('(a) Gini')
+    ax1.set_title('(b)) Entropy')
+    fig.text(0.5, 0.04, 'Depth', ha='center')
+    fig.text(0.04, 0.5, '% of best result', va='center', rotation='vertical')
+
+    ax.grid(zorder=0)
+    ax1.grid(zorder=0)
+    plt.locator_params(axis='y', nbins=5)
+
+    handles, labels = ax1.get_legend_handles_labels()
+    ax.get_legend().remove()
+    sns.set(font_scale=1)
+    plt.legend(handles=handles, loc="lower left", bbox_to_anchor=[0.45, 0.05],
+               ncol=4, shadow=True, title="Min_Samples_Split", fancybox=True, prop={'size': 8})
+
+    #fig.suptitle('Decision Tree Parameter Tuning')
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
+    #save_figures(fig, filename)
+    plt.savefig('Images/' + filename + '.eps', format='eps')
+
+    fig.tight_layout()
 
 
 if __name__ == '__main__':
@@ -77,4 +103,3 @@ if __name__ == '__main__':
 
     if VISUALIZE_RESULTS:
         visualize()
-

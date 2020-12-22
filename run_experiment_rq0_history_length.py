@@ -10,21 +10,21 @@ PARALLEL = False
 RUN_EXPERIMENT = False
 EVALUATE = True
 VISUALIZE_RESULTS = True
-history_lengths = [2, 4, 5, 6, 7, 8, 9, 10, 15, 25, 50]
+history_lengths = [2, 4, 5, 6, 7, 8, 9, 10, 15, 23, 25, 27, 29, 31]
 
 
 def exp_history_length(iteration):
     avg_napfd = []
     """
-    lambda hl: (agents.NetworkAgent(histlen=hl, state_size=retecs.DEFAULT_STATE_SIZE, action_size=1,
-                                    hidden_size=retecs.DEFAULT_NO_HIDDEN_NODES), retecs.preprocess_continuous,
-                reward.tcfail),
-    """
-    ags = [
-        lambda hl: (agents.DTAgent(histlen=hl,
+   lambda hl: (agents.DTAgent(histlen=hl,
                                 action_size=1, criterion=retecs.DEFAULT_CRITERION, max_depth=retecs.DEFAULT_MAX_DEPTH,
                                 min_samples_split=retecs.DEFAULT_MIN_SAMPLES_SPLIT), retecs.preprocess_continuous,
                  reward.tcfail),
+    """
+    ags = [
+        lambda hl: (agents.NetworkAgent(histlen=hl, state_size=retecs.DEFAULT_STATE_SIZE, action_size=1,
+                                        hidden_size=retecs.DEFAULT_NO_HIDDEN_NODES), retecs.preprocess_continuous,
+                    reward.tcfail),
     ]
 
     for histlen in history_lengths:
@@ -63,18 +63,18 @@ def visualize():
     df = df[~df['agent'].isin(['heur_random', 'heur_sort', 'heur_weight'])]
 
     rel_df = df.groupby(['agent', 'history_length'], as_index=False).mean()
-    rel_df['napfd'] = rel_df['napfd'] / max(rel_df['napfd']) * 100
 
     rel_df.loc[rel_df['agent'] == 'mlpclassifier', 'agent'] = method_names['mlpclassifier']
     rel_df.loc[rel_df['agent'] == 'dtclassifier', 'agent'] = method_names['dtclassifier']
+    rel_df['napfd'] = rel_df['napfd'] / max(rel_df['napfd']) * 100
 
     fig = plt.figure(figsize=figsize_column(1.0))
     ax = sns.barplot(x='history_length', y='napfd', hue='agent', data=rel_df, figure=fig)
     ax.set_xlabel('History Length')
-    ax.set_ylabel('\% of best result')
+    ax.set_ylabel('% of best result')
     ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
     ax.set_xticklabels(history_lengths)
-    ax.set_ylim([60, 100])
+    ax.set_ylim([50, 100])
     plt.locator_params(axis='y', nbins=5)
 
     #    state_space = [3 * 3 * (2 ** hl) for hl in history_lengths]
@@ -83,7 +83,7 @@ def visualize():
     #    ax2.set_ylabel('State Space Size')
     #    ax2.tick_params('y')
 
-    ax.legend(title=None, loc='upper left', frameon=True)
+    ax.legend(loc='upper center', frameon=True,  bbox_to_anchor=[0.5, 1.35], ncol=2)
 
     ax.set_axisbelow(True)
     ax.yaxis.grid(zorder=0)
@@ -92,7 +92,7 @@ def visualize():
 
     fig.tight_layout()
     #save_figures(fig, filename)
-    plt.savefig(filename + '.eps', format='eps')
+    plt.savefig('Images/' + filename + '.eps', format='eps')
 
     plt.clf()
 

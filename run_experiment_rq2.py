@@ -111,6 +111,7 @@ def visualize():
         xl = ax.get_xlim()
         ax.plot(xl, [0, 0], color='k', linestyle='-', zorder=0.5)
         ax.set_xlim(xl)
+        ax.set_ylim(-1, 1)
         ax.set_ylabel('')
         ax.set_xlabel('CI Cycle')
         ax.legend_.remove()
@@ -126,8 +127,8 @@ def visualize():
         elif i == 1:
             ax.set_title('ABB IOF/ROL')
         elif i == 2 and len(mean_df['env'].unique()) == 3:
-            ax.legend(ncol=1, loc=1, frameon=True)
-            ax.set_title('BNP')
+            ax.legend(ncol=3, loc='lower right', bbox_to_anchor=[1, 0], frameon=True)
+            ax.set_title('Finance')
 
         i += 1
 

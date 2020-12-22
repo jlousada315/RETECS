@@ -6,7 +6,7 @@ from run_experiment_common import *
 
 # For overriding defaults from run_experiment_common
 PARALLEL = False
-RUN_EXPERIMENT = True
+RUN_EXPERIMENT = False
 VISUALIZE_RESULTS = True
 
 
@@ -43,9 +43,10 @@ def visualize():
 
             axarr[row, column].legend_.remove()
 
-            #axarr[row, column].set_xticks(np.arange(0, 350, 30), minor=False)
-            #axarr[row, column].set_xticklabels([0, '', 60, '', 120, '', 180, '', 240, '', 300], minor=False)
-            axarr[row, column].xaxis.grid(True, which='minor')
+            axarr[row, column].set_xticks(np.arange(0, 360, 60), minor=False)
+            axarr[row, column].set_xticklabels([0, 60, 120, 180, 240, 300], minor=False)
+
+            #axarr[row, column].xaxis.grid(True, which='minor')
 
             if column == 1:
                 axarr[row, column].set_title('%s %s' % (subplot_labels[row], reward_names[rewardfun]))
@@ -61,8 +62,8 @@ def visualize():
             if column == 0:
                 axarr[row, column].set_ylabel('NAPFD')
 
-            if row == 0 and column == 0:
-                axarr[row, column].legend(loc=2, ncol=2, frameon=True, bbox_to_anchor=(0.065, 1.1))
+            if row == 0 and column == 2:
+                axarr[row, column].legend(loc='upper right', ncol=2, frameon=True)
 
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.2, hspace=0.3)

@@ -55,21 +55,25 @@ def visualize():
 
     df = stats.load_stats_dataframe(iteration_results, aggregated_results)
     df = df[~df['agent'].isin(['heur_random', 'heur_sort', 'heur_weight'])]
+    sns.set(font_scale=1.4)
 
     for (i, env) in enumerate(df.env.unique()):
         fig_filename = filename + '_' + env
+
         rel_df = df[df['env'] == env].groupby(['agent', 'hidden_size'], as_index=False).mean()
         rel_df['napfd'] = rel_df['napfd'] / max(rel_df['napfd']) * 100
 
-        ax = sns.barplot(x='hidden_size', y='napfd', data=rel_df, errwidth=0, linewidth=1)
-        ax.set_xlabel('No. of Actions')
-        ax.set_ylabel('\% of best result')
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-        ax.set_xticklabels(hidden_sizes)
-        #save_figures(ax.figure, fig_filename)
-        plt.savefig(fig_filename + '.eps', format='eps')
+        ax = sns.barplot(x='napfd', y='hidden_size', data=rel_df, errwidth=0, linewidth=1)
 
-        plt.clf()
+        ax.set_ylabel('Hidden Layer Architecture')
+        ax.set_xlabel('% of best result ')
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+        ax.set_yticklabels(hidden_sizes)
+
+        #save_figures(ax.figure, fig_filename)
+        plt.tight_layout()
+        plt.savefig(fig_filename + '.eps', format='eps')
+        plt.show()
 
 
 if __name__ == '__main__':
